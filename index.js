@@ -1,9 +1,14 @@
 const express = require("express"); // Importing Express to create the server
 const path = require('path'); // Importing Path module to handle file paths
 const { connectToMongoDB } = require("./connect"); // Importing the MongoDB connection function
+const cookieParser = require('cookie-parser'); // Importing cookie-parser to handle cookies
+const { restrictToLoggedinUserOnly, checkAuth } = require("./middleware/auth"); // Importing authentication middleware
+
+const URL = require("./models/URL"); // Importing the URL model for database operations
+
 const urlRoute = require("./routes/url"); // Importing URL-related routes
 const staticRoute = require('./routes/staticRouter'); // Importing static routes for rendering views
-const URL = require("./models/URL"); // Importing the URL model for database operations
+const userRoute = require('./routes/user')
 
 const app = express(); // Creating an Express application
 const PORT = 8001; // Defining the port for the server
@@ -20,10 +25,13 @@ app.set("views", path.resolve("./views")); // Setting the views directory
 // Middleware to parse JSON and URL-encoded data
 app.use(express.json()); // Middleware to parse JSON request bodies
 app.use(express.urlencoded({ extended: false })); // Middleware to parse URL-encoded request bodies
+app.use(cookieParser()); // Middleware to parse cookies from the request
+
 
 // Routes
-app.use("/url", urlRoute); // Mount URL-related routes at "/url"
-app.use("/", staticRoute); // Mount static routes at the root "/"
+app.use("/url", restrictToLoggedinUserOnly, urlRoute); // Mount URL-related routes at "/url"
+app.use("/user", userRoute);
+app.use("/", checkAuth, staticRoute); // Mount static routes at the root "/"
 
 // Route to handle redirection for short URLs
 app.get("/url/:shortId", async (req, res) => {

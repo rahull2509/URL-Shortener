@@ -16,6 +16,7 @@ async function handleGenerateNewShortURL(req, res) {
     shortId: shortId, // The generated short ID
     redirectURL: body.url, // The original URL to redirect to
     visitHistory: [], // Initialize visit history as an empty array
+    createdBy: req.user._id,
   });
 
   // Render the home page with the list of all URLs
